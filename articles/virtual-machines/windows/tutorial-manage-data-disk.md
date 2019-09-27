@@ -1,115 +1,128 @@
 ---
-title: Manage Azure disks with the Azure PowerShell | Microsoft Docs
-description: Tutorial - Manage Azure disks with the Azure PowerShell 
+title: Tutorial - Manage Azure disks with Azure PowerShell | Microsoft Docs
+description: In this tutorial, you learn how to use Azure PowerShell to create and manage Azure disks for virtual machines
 services: virtual-machines-windows
 documentationcenter: virtual-machines
-author: neilpeterson
-manager: timlt
+author: cynthn
+manager: gwallace
 editor: tysonn
-tags: azure-service-management
+tags: azure-resource-manager
 
 ms.assetid: 
 ms.service: virtual-machines-windows
-ms.devlang: na
-ms.topic: article
+ms.topic: tutorial
 ms.tgt_pltfrm: vm-windows
 ms.workload: infrastructure
-ms.date: 04/21/2017
-ms.author: nepeters
+ms.date: 11/29/2018
+ms.author: cynthn
+ms.custom: mvc
+ms.subservice: disks
+
+#Customer intent: As an IT administrator, I want to learn about Azure Managed Disks so that I can create and manage storage for Windows VMs in Azure.
 ---
 
-# Manage Azure disks with PowerShell
+# Tutorial - Manage Azure disks with Azure PowerShell
 
-In this tutorial, you learn about the different types of VM disks, how to select a disk configuration, and how to create and attach disks to Azure VMs. This tutorial also covers taking disk snapshots.  
+Azure virtual machines use disks to store the VMs operating system, applications, and data. When creating a VM, it's important to choose a disk size and configuration appropriate to the expected workload. This tutorial covers deploying and managing VM disks. You learn about:
 
-The steps in this tutorial can be completed using the latest [Azure PowerShell](https://docs.microsoft.com/powershell/azureps-cmdlets-docs/) module.
+> [!div class="checklist"]
+> * OS disks and temporary disks
+> * Data disks
+> * Standard and Premium disks
+> * Disk performance
+> * Attaching and preparing data disks
+
+## Launch Azure Cloud Shell
+
+The Azure Cloud Shell is a free interactive shell that you can use to run the steps in this article. It has common Azure tools preinstalled and configured to use with your account. 
+
+To open the Cloud Shell, just select **Try it** from the upper right corner of a code block. You can also launch Cloud Shell in a separate browser tab by going to [https://shell.azure.com/powershell](https://shell.azure.com/powershell). Select **Copy** to copy the blocks of code, paste it into the Cloud Shell, and press enter to run it.
 
 ## Default Azure disks
 
 When an Azure virtual machine is created, two disks are automatically attached to the virtual machine. 
 
-**Operating system disk** - Operating system disk are 127 gigabytes in size and host the operating system. The OS disk is assigned a drive letter of `c:` by default. For optimal VM performance, the operating system disk **should** not host applications or data.
+**Operating system disk** - Operating system disks can be sized up to 4 terabytes, and hosts the VMs operating system.  The OS disk is assigned a drive letter of *C:* by default. The disk caching configuration of the OS disk is optimized for OS performance. The OS disk **should not** host applications or data. For applications and data, use a data disk, which is detailed later in this article.
 
-**Temporary disk** - Temporary disks use a solid-state drive that is located on the same Azure host as the VM. Temp disks are highly performant and may be used for operations such as temporary data processing. However, if the VM is moved to a new host, any data stored on a temporary disk is removed. The size of the temporary disk is determined by the VM size. Temporary disks are assigned a drive letter of `d:` by default.
-
-### Temporary disk sizes
-
-| Type | VM Size | Max temp disk size |
-|----|----|----|
-| [General purpose](sizes-general.md) | A and D series | 800 |
-| [Compute optimized](sizes-compute.md) | F series | 800 |
-| [Memory optimized](../virtual-machines-windows-sizes-memory.md) | D and G series | 6144 |
-| [Storage optimized](../virtual-machines-windows-sizes-storage.md) | L series | 5630 |
-| [GPU](sizes-gpu.md) | N series | 1440 |
-| [High performance](sizes-hpc.md) | A and H series | 2000 |
+**Temporary disk** - Temporary disks use a solid-state drive that is located on the same Azure host as the VM. Temp disks are highly performant and may be used for operations such as temporary data processing. However, if the VM is moved to a new host, any data stored on a temporary disk is removed. The size of the temporary disk is determined by the [VM size](sizes.md). Temporary disks are assigned a drive letter of *D:* by default.
 
 ## Azure data disks
 
-Additional data disks can be added for installing applications and storing data. Data disks should be used in any situation where durable and responsive data storage is desired. Each data disk has a maximum capacity of 1 terabyte. The size of the virtual machine determines how many data disks can be attached to a VM. For each VM core, two data disks can be attached. 
-
-### Max data disks per VM
-
-| Type | VM Size | Max data disks per VM |
-|----|----|----|
-| [General purpose](sizes-general.md) | A and D series | 32 |
-| [Compute optimized](sizes-compute.md) | F series | 32 |
-| [Memory optimized](../virtual-machines-windows-sizes-memory.md) | D and G series | 64 |
-| [Storage optimized](../virtual-machines-windows-sizes-storage.md) | L series | 64 |
-| [GPU](sizes-gpu.md) | N series | 48 |
-| [High performance](sizes-hpc.md) | A and H series | 32 |
+Additional data disks can be added for installing applications and storing data. Data disks should be used in any situation where durable and responsive data storage is needed. The size of the virtual machine determines how many data disks can be attached to a VM. For each VM vCPU, four data disks can be attached.
 
 ## VM disk types
 
-Azure provides two types of disk.
+Azure provides two types of disks.
 
-### Standard disk
+**Standard disks** - backed by HDDs, and delivers cost-effective storage while still being performant. Standard disks are ideal for a cost effective dev and test workload.
 
-Standard Storage is backed by HDDs, and delivers cost-effective storage while still being performant. Standard disks are ideal for a cost effective dev and test workload.
-
-### Premium disk
-
-Premium disks are backed by SSD-based high-performance, low-latency disk. Perfect for VMs running production workload. Premium Storage supports DS-series, DSv2-series, GS-series, and FS-series VMs. Premium disks come in three types (P10, P20, P30), the size of the disk determines the disk type. When selecting, a disk size the value is rounded up to the next type. For example, if the size is below 128 GB the disk type will be P10, between 129 and 512 P20, and over 512 P30. 
+**Premium disks** - backed by SSD-based high-performance, low-latency disk. Perfect for VMs running production workload. Premium Storage supports DS-series, DSv2-series, GS-series, and FS-series VMs. Premium disks come in five types (P10, P20, P30, P40, P50), the size of the disk determines the disk type. When selecting, a disk size the value is rounded up to the next type. For example, if the size is below 128 GB the disk type is P10, or between 129 GB and 512 GB the disk is P20.
 
 ### Premium disk performance
+[!INCLUDE [disk-storage-premium-ssd-sizes](../../../includes/disk-storage-premium-ssd-sizes.md)]
 
-|Premium storage disk type | P10 | P20 | P30 |
-| --- | --- | --- | --- |
-| Disk size (round up) | 128 GB | 512 GB | 1,024 GB (1 TB) |
-| IOPS per disk | 500 | 2,300 | 5,000 |
-Throughput per disk | 100 MB/s | 150 MB/s | 200 MB/s |
+While the above table identifies max IOPS per disk, a higher level of performance can be achieved by striping multiple data disks. For instance, 64 data disks can be attached to Standard_GS5 VM. If each of these disks is sized as a P30, a maximum of 80,000 IOPS can be achieved. For detailed information on max IOPS per VM, see [VM types and sizes](./sizes.md).
 
 ## Create and attach disks
 
-To complete the example in this tutorial, you must have an existing virtual machine. If needed, this [script sample](../scripts/virtual-machines-windows-powershell-sample-create-vm.md) can create one for you. When working through the tutorial, replace the resource group and VM names where needed.
+To complete the example in this tutorial, you must have an existing virtual machine. If needed, create a virtual machine with the following commands.
 
-Create the initial configuration with [New-AzureRmDiskConfig](/powershell/module/azurerm.compute/new-azurermdiskconfig). The following example configures a disk that is 50 gigabytes in size.
+Set the username and password needed for the administrator account on the virtual machine with [Get-Credential](https://msdn.microsoft.com/powershell/reference/5.1/microsoft.powershell.security/Get-Credential):
 
-```powershell
-$diskConfig = New-AzureRmDiskConfig -Location westus -CreateOption Empty -DiskSizeGB 128
+
+Create the virtual machine with [New-AzVM](https://docs.microsoft.com/powershell/module/az.compute/new-azvm). You'll be prompted to enter a username and password for the administrators account for the VM.
+
+```azurepowershell-interactive
+New-AzVm `
+    -ResourceGroupName "myResourceGroupDisk" `
+    -Name "myVM" `
+    -Location "East US" `
+    -VirtualNetworkName "myVnet" `
+    -SubnetName "mySubnet" `
+    -SecurityGroupName "myNetworkSecurityGroup" `
+    -PublicIpAddressName "myPublicIpAddress" 
 ```
 
-Create the data disk with the [New-AzureRmDisk](/powershell/module/azurerm.compute/new-azurermdisk) command.
 
-```powershell
-$dataDisk = New-AzureRmDisk -ResourceGroupName myResourceGroup -DiskName myDataDisk -Disk $diskConfig
+Create the initial configuration with [New-AzDiskConfig](https://docs.microsoft.com/powershell/module/az.compute/new-azdiskconfig). The following example configures a disk that is 128 gigabytes in size.
+
+```azurepowershell-interactive
+$diskConfig = New-AzDiskConfig `
+    -Location "EastUS" `
+    -CreateOption Empty `
+    -DiskSizeGB 128
 ```
 
-Get the virtual machine that you want to add the data disk to with the [Get-AzureRmVM](/powershell/module/azurerm.compute/get-azurermvm) command.
+Create the data disk with the [New-AzDisk](https://docs.microsoft.com/powershell/module/az.compute/new-Azdisk) command.
 
-```powershell
-$vm = Get-AzureRmVM -ResourceGroupName myResourceGroup -Name myVM
+```azurepowershell-interactive
+$dataDisk = New-AzDisk `
+    -ResourceGroupName "myResourceGroupDisk" `
+    -DiskName "myDataDisk" `
+    -Disk $diskConfig
 ```
 
-Add the data disk to the virtual machine configuration with the [Add-AzureRmVMDataDisk](/powershell/module/azurerm.compute/add-azurermvmdatadisk) command.
+Get the virtual machine that you want to add the data disk to with the [Get-AzVM](https://docs.microsoft.com/powershell/module/az.compute/get-azvm) command.
 
-```powershell
-$vm = Add-AzureRmVMDataDisk -VM $vm -Name myDataDisk -CreateOption Attach -ManagedDiskId $dataDisk.Id -Lun 1
+```azurepowershell-interactive
+$vm = Get-AzVM -ResourceGroupName "myResourceGroupDisk" -Name "myVM"
 ```
 
-Update the virtual machine with the [Update-AzureRmVM](/powershell/module/azurerm.compute/add-azurermvmdatadisk) command.
+Add the data disk to the virtual machine configuration with the [Add-AzVMDataDisk](https://docs.microsoft.com/powershell/module/az.compute/add-azvmdatadisk) command.
 
-```powershell
-Update-AzureRmVM -ResourceGroupName myResourceGroup -VM $vm
+```azurepowershell-interactive
+$vm = Add-AzVMDataDisk `
+    -VM $vm `
+    -Name "myDataDisk" `
+    -CreateOption Attach `
+    -ManagedDiskId $dataDisk.Id `
+    -Lun 1
+```
+
+Update the virtual machine with the [Update-AzVM](https://docs.microsoft.com/powershell/module/az.compute/add-azvmdatadisk) command.
+
+```azurepowershell-interactive
+Update-AzVM -ResourceGroupName "myResourceGroupDisk" -VM $vm
 ```
 
 ## Prepare data disks
@@ -120,15 +133,46 @@ Once a disk has been attached to the virtual machine, the operating system needs
 
 Create an RDP connection with the virtual machine. Open up PowerShell and run this script.
 
-```powershell
-Get-Disk | Where partitionstyle -eq 'raw' | `
-Initialize-Disk -PartitionStyle MBR -PassThru | `
-New-Partition -AssignDriveLetter -UseMaximumSize | `
-Format-Volume -FileSystem NTFS -NewFileSystemLabel "myDataDisk" -Confirm:$false
+```azurepowershell
+Get-Disk | Where partitionstyle -eq 'raw' |
+    Initialize-Disk -PartitionStyle MBR -PassThru |
+    New-Partition -AssignDriveLetter -UseMaximumSize |
+    Format-Volume -FileSystem NTFS -NewFileSystemLabel "myDataDisk" -Confirm:$false
 ```
+
+## Verify the data disk
+
+To verify that the data disk is attached, view the `StorageProfile` for the attached `DataDisks`.
+
+```azurepowershell-interactive
+$vm.StorageProfile.DataDisks
+```
+
+The output should look something like this example:
+
+```
+Name            : myDataDisk
+DiskSizeGB      : 128
+Lun             : 1
+Caching         : None
+CreateOption    : Attach
+SourceImage     :
+VirtualHardDisk :
+```
+
 
 ## Next steps
 
-In this tutorial, you have learned about VM disks. Advance to the next tutorial to learn about automating VM configuration.
+In this tutorial, you learned about VM disks topics such as:
 
-[Automate VM configuration](./tutorial-automate-vm-deployment.md)
+> [!div class="checklist"]
+> * OS disks and temporary disks
+> * Data disks
+> * Standard and Premium disks
+> * Disk performance
+> * Attaching and preparing data disks
+
+Advance to the next tutorial to learn about automating VM configuration.
+
+> [!div class="nextstepaction"]
+> [Automate VM configuration](./tutorial-automate-vm-deployment.md)

@@ -17,26 +17,25 @@ ms.date: 04/13/2017
 ms.author: ralfwi
 ---
 
-# Managing and connecting to your subscription in Azure Germany
-Azure Germany has unique URLs and endpoints for managing your environment. It is important to use the right connections to manage your environment through the portal or PowerShell. Once you are connected to the Azure Germany environment, the normal operations for managing a service works if the component has been deployed.
+# Manage and connect to your subscription in Azure Germany
+Azure Germany has unique URLs and endpoints for managing your environment. It's important to use the right connections to manage your environment through the Azure portal or PowerShell. After you connect to the Azure Germany environment, the normal operations for managing a service work if the component has been deployed.
 
-## Connecting via the portal
-The portal is the primary way that most people connect to Azure Germany.  To connect, browse to the portal at [https://portal.microsoftazure.de](https://portal.microsoftazure.de). 
-
-> [!NOTE]
-> Please note that only the new (Azure Resource Manager) portal is available for Azure Germany!
+> [!IMPORTANT]
+>
+>This applies to Azure customers in Microsoft Cloud Germany who purchase Azure services directly from Microsoft with pay-as-you-go pricing. 
+>
+>Effective September 14, 2019, a new European Union mandate took effect that requires customer credit card payments to go through a strong customer authentication (SCA) challenge. As a result, customers on pay-as-you-go pricing are unable to create new subscriptions or add or update payment information, until they [migrate to a new Azure region](./germany-migration-main.md). 
+>
 >
 
-## Creating subscriptions
-Subscriptions can be created for your account by connecting to [https://account.windowsazure.de](https://account.windowsazure.de).
+## Manage subscription
+You can manage your Azure resources and view subscription billing information in the [Azure portal](https://portal.microsoftazure.de). 
 
-## Free account
-Free accounts for Azure Germany are available. Please use [this link](https://azure.microsoft.com/free/germany/).
-
+## Manage account
+To manage your account information, such as your contact info, visit the [Account center](https://account.windowsazure.de).
 
 ## Next steps
-For supplemental information and updates, subscribe to the 
-[Azure Germany Blog](https://blogs.msdn.microsoft.com/azuregermany/).
+Learn how to [migrate to a new Azure region](./germany-migration-main.md).
 
 
 

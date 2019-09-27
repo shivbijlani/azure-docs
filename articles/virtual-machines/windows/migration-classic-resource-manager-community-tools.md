@@ -4,7 +4,7 @@ description: This article catalogs the tools that have been provided by the comm
 services: virtual-machines-windows
 documentationcenter: ''
 author: singhkays
-manager: timlt
+manager: gwallace
 editor: ''
 tags: azure-resource-manager
 
@@ -12,7 +12,7 @@ ms.assetid: 228b697b-3950-49f5-84bb-283bb56621b1
 ms.service: virtual-machines-windows
 ms.workload: infrastructure-services
 ms.tgt_pltfrm: vm-windows
-ms.devlang: na
+
 ms.topic: article
 ms.date: 03/30/2017
 ms.author: kasing
@@ -40,7 +40,7 @@ This is a collection of helper tools created as part of enterprise migrations fr
 ## migAz
 migAz is an additional option to migrate a complete set of classic IaaS resources to Azure Resource Manager IaaS resources. The migration can occur within the same subscription or between different subscriptions and subscription types (ex: CSP subscriptions).
 
-[Link to the tool documentation](https://github.com/Azure/classic-iaas-resourcemanager-migration/tree/master/migaz)
+[Link to the tool documentation](https://github.com/Azure/migAz)
 
 ## Next Steps
 

@@ -3,19 +3,19 @@ title: Overview of the Azure Compute Unit | Microsoft Docs
 description: Overview of the concept of the Azure compute units for Linux. The ACU provides a way of comparing CPU performance across Azure SKUs.
 services: virtual-machines-linux
 documentationcenter: ''
-author: cynthn
-manager: timlt
+author: jonbeck7
+manager: gwallace
 editor: ''
 tags: azure-resource-manager,azure-service-management
 
 ms.assetid: 
 ms.service: virtual-machines-linux
-ms.devlang: na
+
 ms.topic: article
 ms.tgt_pltfrm: vm-linux
 ms.workload: infrastructure-services
-ms.date: 03/23/2017
-ms.author: cynthn
+ms.date: 12/21/2018
+ms.author: jonbeck
 
 ---
 
